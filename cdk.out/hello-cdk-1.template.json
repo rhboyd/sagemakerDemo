@@ -1,0 +1,252 @@
+{
+  "Resources": {
+    "SageMakerAPIB90B010E": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "SageMakerAPI"
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/Resource"
+      }
+    },
+    "SageMakerAPIDeployment3DF945E6eda914574cc74c92f17854772b9f1d53": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "SageMakerAPIB90B010E"
+        },
+        "Description": "Automatically created by the RestApi construct"
+      },
+      "DependsOn": [
+        "PostRoot002E6BCF",
+        "SageMakerAPIOPTIONS3F516A1F"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/Deployment/Resource"
+      }
+    },
+    "SageMakerAPIDeploymentStageprod96C62A58": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "SageMakerAPIB90B010E"
+        },
+        "DeploymentId": {
+          "Ref": "SageMakerAPIDeployment3DF945E6eda914574cc74c92f17854772b9f1d53"
+        },
+        "StageName": "prod"
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/DeploymentStage.prod/Resource"
+      }
+    },
+    "SageMakerAPICloudWatchRoleD0A6D38C": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/CloudWatchRole/Resource"
+      }
+    },
+    "SageMakerAPIAccount67329452": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "SageMakerAPICloudWatchRoleD0A6D38C",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "SageMakerAPIB90B010E"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/Account"
+      }
+    },
+    "SageMakerAPIOPTIONS3F516A1F": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "OPTIONS",
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "SageMakerAPIB90B010E",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "SageMakerAPIB90B010E"
+        },
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "StatusCode": "204"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SageMakerAPI/Default/OPTIONS/Resource"
+      }
+    },
+    "SMInvoke426B99EE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "*",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "FullSageMaker"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/SMInvoke/Resource"
+      }
+    },
+    "PostRoot002E6BCF": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "SageMakerAPIB90B010E",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "SageMakerAPIB90B010E"
+        },
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "Credentials": {
+            "Fn::GetAtt": [
+              "SMInvoke426B99EE",
+              "Arn"
+            ]
+          },
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              },
+              "StatusCode": "200"
+            }
+          ],
+          "Type": "AWS",
+          "Uri": "arn:aws:apigateway:us-east-1:runtime.sagemaker:path/endpoints/None/invocations"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "StatusCode": "200"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "hello-cdk-1/PostRoot/Resource"
+      }
+    }
+  },
+  "Outputs": {
+    "SageMakerAPIEndpoint0398D5C2": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "SageMakerAPIB90B010E"
+            },
+            ".execute-api.us-east-1.",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/",
+            {
+              "Ref": "SageMakerAPIDeploymentStageprod96C62A58"
+            },
+            "/"
+          ]
+        ]
+      }
+    }
+  }
+}
